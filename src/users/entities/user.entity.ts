@@ -1,27 +1,35 @@
+import { ApiProperty } from '@nestjs/swagger';
 import {
   Column,
-  DeleteDateColumn,
+  CreateDateColumn,
   Entity,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 
 @Entity()
 export class User {
   @PrimaryGeneratedColumn()
+  @ApiProperty()
   id: number;
 
-  @Column()
-  name: string;
+  @Column({ unique: false })
+  @ApiProperty()
+  fullname: string;
 
-  @Column({ unique: true, nullable: false })
+  @Column({ type: 'varchar', length: 100, unique: true })
+  @ApiProperty()
   email: string;
 
-  @Column({ nullable: false, select: false })
+  @Column({ type: 'varchar', length: 100 })
+  @ApiProperty()
   password: string;
 
-  @Column({ default: 'user' })
-  rol: string;
+  @CreateDateColumn()
+  @ApiProperty()
+  created_at: Date;
 
-  @DeleteDateColumn()
-  deleteAt: Date;
+  @UpdateDateColumn()
+  @ApiProperty()
+  updated_at: Date;
 }

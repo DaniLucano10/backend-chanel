@@ -10,17 +10,23 @@ import {
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { ApiOperation, ApiQuery } from '@nestjs/swagger';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
+  @ApiOperation({ summary: 'Crear usuario' })
   create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
   }
 
   @Get()
+  @ApiOperation({ summary: 'Listar los usuarios' })
+  @ApiQuery({ name: 'status', type: Boolean, required: false })
+  @ApiQuery({ name: 'email', type: String, required: false })
+  @ApiQuery({ name: 'fullname', type: String, required: false })
   findAll() {
     return this.usersService.findAll();
   }
