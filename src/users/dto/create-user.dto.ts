@@ -5,15 +5,15 @@ export class CreateUserDto {
   @IsString({ message: "El campo 'fullname' debe ser una cadena de texto" })
   @IsNotEmpty({ message: "El campo 'fullname' es requerido" })
   @ApiProperty()
-  fullname: string;
+  fullname!: string;
 
   @IsString({ message: "El campo 'email' debe ser una cadena de texto" })
   @IsNotEmpty({ message: "El campo 'email' es requerido" })
   @ApiProperty()
-  email: string;
+  email!: string;
 
-  // @IsString({ message: "El campo 'password' debe ser una cadena de texto" })
-  // @IsNotEmpty({ message: "El campo 'password' es requerido" })
-  // @ApiProperty()
-  password: string;
+  @IsString({ message: "El campo 'password' debe ser una cadena de texto" })
+  @IsNotEmpty({ message: "El campo 'password' es requerido" })
+  @ApiProperty()
+  password!: string;
 }
