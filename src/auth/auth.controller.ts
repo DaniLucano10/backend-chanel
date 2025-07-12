@@ -9,9 +9,10 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
-import { ApiOperation } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { Public } from './decorators/public.decorator';
 
+@ApiBearerAuth('JWT-auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -19,7 +20,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Post('login')
   @ApiOperation({ summary: 'Iniciar sesión' })
-  login(
+  signIn(
     @Body()
     loginDto: LoginDto,
   ) {
@@ -27,7 +28,7 @@ export class AuthController {
   }
 
   @Get('profile')
-  @ApiOperation({ summary: 'Obtener perfil'})
+  @ApiOperation({ summary: 'Obtener perfil' })
   getProfile(@Req() req) {
     return req.user;
   }
