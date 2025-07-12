@@ -25,6 +25,10 @@ export class User {
   @ApiProperty()
   password!: string;
 
+  @Column({ type: 'boolean', default: true })
+  @ApiProperty()
+  status!: boolean;
+
   @CreateDateColumn()
   @ApiProperty()
   created_at!: Date;

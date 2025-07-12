@@ -1,6 +1,9 @@
 import {
   BadRequestException,
+  ConflictException,
+  HttpException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -9,6 +12,7 @@ import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 
 import * as bcrypt from 'bcrypt';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -16,7 +20,7 @@ export class UsersService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
   ) {}
-  async create(createUserDto: CreateUserDto) {
+  async create(createUserDto: CreateUserDto): Promise<any> {
     const existingUser = await this.userRepository.findOne({
       where: { email: createUserDto.email },
     });
@@ -25,18 +29,20 @@ export class UsersService {
       throw new BadRequestException('El correo ya está registrado');
     }
 
-    const saltOrRounds = 10;
-    const hashedPassword = await bcrypt.hash(
-      createUserDto.password,
-      saltOrRounds,
-    );
+    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
 
     const user = this.userRepository.create({
       ...createUserDto,
       password: hashedPassword,
     });
 
-    return this.userRepository.save(user);
+    const savedUser = await this.userRepository.save(user);
+
+    // ✅ Remover password de forma segura
+    const { password, ...safeUser } = savedUser;
+    void password; // Esto evita warning de ESLint
+
+    return safeUser;
   }
 
   async findByEmail(email: string): Promise<User> {
@@ -49,9 +55,32 @@ export class UsersService {
     return user;
   }
 
-  find() {
-    return this.userRepository.find({
-      select: ['id', 'fullname', 'email', 'created_at', 'updated_at'],
+  async find(query: {
+    status?: boolean;
+    email?: string;
+    fullname?: string;
+  }): Promise<Omit<User, 'password'>[]> {
+    const filters: Record<string, any> = {};
+
+    if (query.status !== undefined) {
+      filters.status = query.status;
+    }
+    if (query.email) {
+      filters.email = query.email;
+    }
+    if (query.fullname) {
+      filters.fullname = query.fullname;
+    }
+
+    const users = await this.userRepository.find({
+      where: filters,
+      select: ['id', 'fullname', 'email', 'status', 'created_at', 'updated_at'],
+    });
+
+    // Si no hay password en select, esto es más que suficiente:
+    return users.map(({ password, ...rest }) => {
+      void password; // ✅ silencia ESLint si hace falta
+      return rest;
     });
   }
 
@@ -59,8 +88,58 @@ export class UsersService {
     return `This action returns a #${id} user`;
   }
 
-  update(id: number) {
-    return `This action updates a #${id} user`;
+  async update(
+    id: number,
+    updateUserDto: UpdateUserDto,
+  ): Promise<Omit<User, 'password'>> {
+    try {
+      // Busca usuario
+      const user = await this.userRepository.findOne({ where: { id } });
+      if (!user) {
+        throw new ConflictException(`Usuario con ID ${id} no encontrado`);
+      }
+
+      // Actualiza el usuario
+      Object.assign(user, updateUserDto);
+      const updatedUser = await this.userRepository.save(user);
+
+      // ✅ Excluir password correctamente
+      const { password, ...safeUser } = updatedUser;
+      void password; // para que ESLint no se queje
+
+      return safeUser;
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      if (error instanceof Error) {
+        throw new InternalServerErrorException(
+          `Error interno al actualizar el usuario. ${error.message}`,
+        );
+      }
+
+      // Si no es un Error (caso raro)
+      throw new InternalServerErrorException(
+        'Error interno al actualizar el usuario.',
+      );
+    }
+  }
+
+  async toggleStatus(id: number): Promise<Omit<User, 'password'>> {
+    const user = await this.userRepository.findOne({ where: { id } });
+
+    if (!user) {
+      throw new NotFoundException(`Usuario con ID ${id} no encontrado`);
+    }
+
+    user.status = !user.status; // ✅ Alternar el valor booleano
+    const updatedUser = await this.userRepository.save(user);
+
+    const { password, ...safeUser } = updatedUser;
+    void password;
+
+    return safeUser;
   }
 
   remove(id: number) {
