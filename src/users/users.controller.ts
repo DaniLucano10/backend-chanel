@@ -9,13 +9,14 @@ import {
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { ApiOperation, ApiQuery } from '@nestjs/swagger';
-
+import { ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { Public } from 'src/auth/decorators/public.decorator';
+@ApiBearerAuth('JWT-auth')
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  @Public()
   @Post()
   @ApiOperation({ summary: 'Crear usuario' })
   create(@Body() createUserDto: CreateUserDto) {
@@ -24,11 +25,11 @@ export class UsersController {
 
   @Get()
   @ApiOperation({ summary: 'Listar los usuarios' })
-  @ApiQuery({ name: 'status', type: Boolean, required: false })
+  //@ApiQuery({ name: 'status', type: Boolean, required: false })
   @ApiQuery({ name: 'email', type: String, required: false })
   @ApiQuery({ name: 'fullname', type: String, required: false })
-  findAll() {
-    return this.usersService.findAll();
+  find() {
+    return this.usersService.find();
   }
 
   @Get(':id')
@@ -37,8 +38,8 @@ export class UsersController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
+  update(@Param('id') id: string) {
+    return this.usersService.update(+id);
   }
 
   @Delete(':id')
