@@ -5,6 +5,9 @@ import { UsersModule } from '../users/users.module';
 import { JwtModule } from '@nestjs/jwt';
 import { jwtConstants } from './constants/jwt.constant';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { BlacklistedToken } from './entities/blacklisted-token.entity';
+import { ActiveToken } from './entities/active-token.entity';
 
 @Module({
   imports: [
@@ -14,8 +17,10 @@ import { JwtStrategy } from './strategies/jwt.strategy';
       secret: jwtConstants.secret,
       signOptions: { expiresIn: '1d' },
     }),
+    TypeOrmModule.forFeature([ActiveToken, BlacklistedToken]),
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],
+  exports: [AuthService, JwtStrategy],
 })
 export class AuthModule {}
