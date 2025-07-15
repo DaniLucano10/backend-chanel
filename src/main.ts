@@ -8,19 +8,14 @@ async function bootstrap() {
 
   app.enableCors({
     origin: 'http://localhost:5173',
+    methods: 'GET,POST,PUT,DELETE,PATCH',
+    allowedHeaders: 'Content-Type, Authorization',
     Credential: true,
   });
 
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-    }),
-  );
-
+  // swagger
   const config = new DocumentBuilder()
-    .setTitle('API Documentación')
+    .setTitle('API')
     .setDescription('Documentación de la API con Swagger')
     .setVersion('1.0')
     .addBearerAuth(
@@ -28,6 +23,7 @@ async function bootstrap() {
         type: 'http',
         scheme: 'bearer',
         bearerFormat: 'JWT',
+        name: 'JWT',
         description: 'Enter JWT token',
         in: 'header',
       },
@@ -36,12 +32,20 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-
   SwaggerModule.setup('docs', app, document, {
     swaggerOptions: {
       persistAuthorization: true,
     },
   });
+
+  // Global pipes and guards
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
 
   await app.listen(process.env.PORT ?? 3000);
 }
