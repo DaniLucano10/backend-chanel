@@ -32,7 +32,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   async validate(req: Request, payload: JwtPayload) {
     const token = ExtractJwt.fromAuthHeaderAsBearerToken()(req);
     if (!token) {
-      throw new UnauthorizedException('Token no encontrado');
+      throw new UnauthorizedException({
+        message: 'Token not found',
+        error: 'Unauthorized',
+      });
     }
 
     const blacklistedToken = await this.blacklistTokenRepository.findOne({
@@ -40,7 +43,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
 
     if (blacklistedToken) {
-      throw new UnauthorizedException('Token revocado');
+      throw new UnauthorizedException({
+        message: 'Token has been revoked',
+        error: 'Unauthorized',
+      });
     }
 
     const activeToken = await this.activeTokenRepository.findOne({
@@ -48,7 +54,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
 
     if (!activeToken) {
-      throw new UnauthorizedException('Token inválido');
+      throw new UnauthorizedException({
+        message: 'Invalid token',
+        error: 'Unauthorized',
+      });
     }
 
     return {
