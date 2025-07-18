@@ -38,7 +38,7 @@ export class UsersService {
 
     const savedUser = await this.userRepository.save(user);
 
-    // ✅ Remover password de forma segura
+    //Remover password de forma segura
     const { password, ...safeUser } = savedUser;
     void password; // Esto evita warning de ESLint
 
@@ -79,13 +79,23 @@ export class UsersService {
 
     // Si no hay password en select, esto es más que suficiente:
     return users.map(({ password, ...rest }) => {
-      void password; // ✅ silencia ESLint si hace falta
+      void password; // silencia ESLint si hace falta
       return rest;
     });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async findOne(id: number): Promise<Omit<User, 'password'>> {
+    const user = await this.userRepository.findOne({
+      where: { id },
+      select: ['id', 'fullname', 'email', 'status', 'created_at', 'updated_at'],
+    });
+
+    if (!user) {
+      throw new NotFoundException(`Usuario con ID ${id} no encontrado`);
+    }
+
+    // El password ya está excluido por el `select`
+    return user;
   }
 
   async update(
@@ -103,7 +113,7 @@ export class UsersService {
       Object.assign(user, updateUserDto);
       const updatedUser = await this.userRepository.save(user);
 
-      // ✅ Excluir password correctamente
+      // Excluir password correctamente
       const { password, ...safeUser } = updatedUser;
       void password; // para que ESLint no se queje
 
@@ -142,7 +152,26 @@ export class UsersService {
     return safeUser;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async remove(id: number): Promise<{ message: string }> {
+    try {
+      const result = await this.userRepository.delete(id);
+
+      if (result.affected === 0) {
+        throw new NotFoundException(`Usuario con id ${id} no encontrado`);
+      }
+
+      return { message: 'Usuario eliminado exitosamente' };
+    } catch (error) {
+      //  Manejo de errores más robusto
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      // Para otros errores, registramos y lanzamos una excepción genérica
+      console.error('Error al eliminar el usuario:', error);
+      throw new InternalServerErrorException(
+        'Ocurrió un error interno al intentar eliminar el usuario.',
+      );
+    }
   }
 }
