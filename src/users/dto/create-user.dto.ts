@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsPositive, IsString } from 'class-validator';
 
 export class CreateUserDto {
   @IsString({ message: "El campo 'fullname' debe ser una cadena de texto" })
@@ -16,4 +16,9 @@ export class CreateUserDto {
   @IsNotEmpty({ message: "El campo 'password' es requerido" })
   @ApiProperty()
   password!: string;
+
+  @IsPositive({ message: "El campo 'country_id' debe ser un número positivo" })
+  @IsNotEmpty({ message: "El campo 'country_id' es requerido" })
+  @ApiProperty()
+  country_id!: number;
 }

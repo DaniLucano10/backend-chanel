@@ -11,4 +11,9 @@ export class UpdateUserDto {
   @IsOptional()
   @IsEmail()
   email?: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  country_id?: number;
 }

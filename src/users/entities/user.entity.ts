@@ -29,6 +29,10 @@ export class User {
   @ApiProperty()
   status!: boolean;
 
+  @Column({ type: 'integer', nullable: true })
+  @ApiProperty()
+  country_id!: number;
+
   @CreateDateColumn()
   @ApiProperty()
   created_at!: Date;
