@@ -74,7 +74,17 @@ export class UsersService {
 
     const users = await this.userRepository.find({
       where: filters,
-      select: ['id', 'fullname', 'email', 'status', 'created_at', 'updated_at'],
+      select: [
+        'id',
+        'fullname',
+        'email',
+        'status',
+        'created_at',
+        'updated_at',
+        'country',
+        'country_id',
+      ],
+      relations: ['country'],
     });
 
     // Si no hay password en select, esto es más que suficiente:
@@ -87,7 +97,17 @@ export class UsersService {
   async findOne(id: number): Promise<Omit<User, 'password'>> {
     const user = await this.userRepository.findOne({
       where: { id },
-      select: ['id', 'fullname', 'email', 'status', 'created_at', 'updated_at'],
+      select: [
+        'id',
+        'fullname',
+        'email',
+        'status',
+        'created_at',
+        'updated_at',
+        'country',
+        'country_id',
+      ],
+      relations: ['country'],
     });
 
     if (!user) {
@@ -110,11 +130,23 @@ export class UsersService {
       }
 
       // Actualiza el usuario
-      Object.assign(user, updateUserDto);
-      const updatedUser = await this.userRepository.save(user);
+      await this.userRepository.update(id, updateUserDto);
+
+      // Recargar el usuario para obtener la relación actualizada
+      const reloadedUser = await this.userRepository.findOne({
+        where: { id },
+        relations: ['country'],
+      });
+
+      if (!reloadedUser) {
+        // Esto no debería suceder si el usuario existía antes, pero es una buena práctica de seguridad
+        throw new NotFoundException(
+          `Usuario con ID ${id} no encontrado después de la actualización`,
+        );
+      }
 
       // Excluir password correctamente
-      const { password, ...safeUser } = updatedUser;
+      const { password, ...safeUser } = reloadedUser;
       void password; // para que ESLint no se queje
 
       return safeUser;

@@ -3,9 +3,12 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Country } from '../../country/entities/country.entity';
 
 @Entity()
 export class User {
@@ -30,8 +33,12 @@ export class User {
   status!: boolean;
 
   @Column({ type: 'integer', nullable: true })
-  @ApiProperty()
   country_id!: number;
+
+  @ManyToOne(() => Country, { eager: true })
+  @JoinColumn({ name: 'country_id' })
+  @ApiProperty({ type: () => Country })
+  country!: Country;
 
   @CreateDateColumn()
   @ApiProperty()
