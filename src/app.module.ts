@@ -14,6 +14,7 @@ import { BlacklistedToken } from './auth/entities/blacklisted-token.entity';
 import { ActiveToken } from './auth/entities/active-token.entity';
 import { RoleModule } from './role/role.module';
 import { PermissionModule } from './permission/permission.module';
+import { RoleHasPermissionModule } from './role_has_permission/role_has_permission.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { PermissionModule } from './permission/permission.module';
     CountryModule,
     RoleModule,
     PermissionModule,
+    RoleHasPermissionModule,
   ],
   controllers: [AppController],
   providers: [
