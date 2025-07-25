@@ -1,34 +1,54 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+} from '@nestjs/common';
 import { RoleService } from './role.service';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
+import { ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { ParsePositivePipe } from '../pipes/parse_positive/parse_positive.pipe';
 
+@ApiBearerAuth('JWT-auth')
 @Controller('role')
 export class RoleController {
   constructor(private readonly roleService: RoleService) {}
 
   @Post()
-  create(@Body() createRoleDto: CreateRoleDto) {
+  @ApiOperation({ summary: 'Crear un rol' })
+  async create(@Body() createRoleDto: CreateRoleDto) {
     return this.roleService.create(createRoleDto);
   }
 
   @Get()
-  findAll() {
-    return this.roleService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.roleService.findOne(+id);
+  @ApiOperation({ summary: 'Listar los roles' })
+  @ApiQuery({ name: 'id', required: false })
+  @ApiQuery({ name: 'name', required: false })
+  async findByCriteria(
+    @Query('id') id: number,
+    @Query('name') name: string,
+  ): Promise<CreateRoleDto[]> {
+    const data = { id, name };
+    return (await this.roleService.findByCriteria(data)) as CreateRoleDto[];
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateRoleDto: UpdateRoleDto) {
-    return this.roleService.update(+id, updateRoleDto);
+  @ApiOperation({ summary: 'Actualizar un rol' })
+  async update(
+    @Param('id', new ParsePositivePipe()) id: number,
+    @Body() updateRoleDto: UpdateRoleDto,
+  ) {
+    return this.roleService.update(id, updateRoleDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.roleService.remove(+id);
+  @ApiOperation({ summary: 'Eliminar un rol' })
+  async remove(@Param('id', new ParsePositivePipe()) id: number) {
+    return this.roleService.remove(id);
   }
 }
