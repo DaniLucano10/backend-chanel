@@ -13,6 +13,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { Public } from 'src/auth/decorators/public.decorator';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { ParsePositivePipe } from '../pipes/parse_positive/parse_positive.pipe';
 @ApiBearerAuth('JWT-auth')
 @Controller('users')
 export class UsersController {
@@ -43,8 +44,11 @@ export class UsersController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Actualizar un usuario (parcial)' })
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+  @ApiOperation({ summary: 'Actualizar un usuario' })
+  update(
+    @Param('id', new ParsePositivePipe()) id: string,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
     return this.usersService.update(+id, updateUserDto);
   }
 
@@ -56,7 +60,7 @@ export class UsersController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Eliminar un usuario' })
-  remove(@Param('id') id: string) {
+  remove(@Param('id', new ParsePositivePipe()) id: string) {
     return this.usersService.remove(+id);
   }
 }
