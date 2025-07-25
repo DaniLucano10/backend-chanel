@@ -12,6 +12,7 @@ import { User } from './users/entities/user.entity';
 import { Country } from './country/entities/country.entity';
 import { BlacklistedToken } from './auth/entities/blacklisted-token.entity';
 import { ActiveToken } from './auth/entities/active-token.entity';
+import { RoleModule } from './role/role.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { ActiveToken } from './auth/entities/active-token.entity';
     UsersModule,
     AuthModule,
     CountryModule,
+    RoleModule,
   ],
   controllers: [AppController],
   providers: [
