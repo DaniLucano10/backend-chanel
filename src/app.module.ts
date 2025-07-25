@@ -16,6 +16,10 @@ import { RoleModule } from './role/role.module';
 import { PermissionModule } from './permission/permission.module';
 import { RoleHasPermissionModule } from './role_has_permission/role_has_permission.module';
 import { UserHasRoleModule } from './user_has_role/user_has_role.module';
+import { Role } from './role/entities/role.entity';
+import { Permission } from './permission/entities/permission.entity';
+import { UserHasRole } from './user_has_role/entities/user_has_role.entity';
+import { RoleHasPermission } from './role_has_permission/entities/role_has_permission.entity';
 
 @Module({
   imports: [
@@ -29,7 +33,16 @@ import { UserHasRoleModule } from './user_has_role/user_has_role.module';
       username: process.env.DB_USERNAME,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
-      entities: [User, Country, BlacklistedToken, ActiveToken],
+      entities: [
+        User,
+        Country,
+        BlacklistedToken,
+        ActiveToken,
+        Role,
+        Permission,
+        UserHasRole,
+        RoleHasPermission,
+      ],
       synchronize: true,
     }),
     UsersModule,
