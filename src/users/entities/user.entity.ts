@@ -5,10 +5,12 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { Country } from '../../country/entities/country.entity';
+import { UserHasRole } from '../../user_has_role/entities/user_has_role.entity';
 
 @Entity()
 export class User {
@@ -47,4 +49,8 @@ export class User {
   @UpdateDateColumn()
   @ApiProperty()
   updated_at!: Date;
+
+  @OneToMany(() => UserHasRole, (userrole) => userrole.user)
+  @ApiProperty()
+  roles!: UserHasRole[];
 }

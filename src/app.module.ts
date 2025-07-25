@@ -15,6 +15,7 @@ import { ActiveToken } from './auth/entities/active-token.entity';
 import { RoleModule } from './role/role.module';
 import { PermissionModule } from './permission/permission.module';
 import { RoleHasPermissionModule } from './role_has_permission/role_has_permission.module';
+import { UserHasRoleModule } from './user_has_role/user_has_role.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { RoleHasPermissionModule } from './role_has_permission/role_has_permissi
     RoleModule,
     PermissionModule,
     RoleHasPermissionModule,
+    UserHasRoleModule,
   ],
   controllers: [AppController],
   providers: [

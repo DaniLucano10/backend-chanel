@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { RoleHasPermission } from '../../role_has_permission/entities/role_has_permission.entity';
+import { UserHasRole } from '../../user_has_role/entities/user_has_role.entity';
 
 export class Role {
   @PrimaryGeneratedColumn()
@@ -20,8 +21,9 @@ export class Role {
   @UpdateDateColumn()
   updated_at!: Date;
 
-  users: string[];
+  @OneToMany(() => UserHasRole, (userrole) => userrole.role)
+  users!: UserHasRole[];
 
   @OneToMany(() => RoleHasPermission, (rolepermission) => rolepermission.role)
-  permissions: RoleHasPermission[];
+  permissions!: RoleHasPermission[];
 }
