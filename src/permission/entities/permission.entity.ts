@@ -1,5 +1,13 @@
-import { Column, CreateDateColumn, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { RoleHasPermission } from '../../role_has_permission/entities/role_has_permission.entity';
 
+@Entity()
 export class Permission {
   @PrimaryGeneratedColumn()
   id!: number;
@@ -7,7 +15,11 @@ export class Permission {
   @Column({ unique: true })
   name!: string;
 
-  role!: string;
+  @OneToMany(
+    () => RoleHasPermission,
+    (rolepermission) => rolepermission.permission,
+  )
+  role!: RoleHasPermission;
 
   @Column()
   guard_name!: string;

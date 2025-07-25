@@ -11,6 +11,7 @@ import { UpdatePermissionDto } from './dto/update-permission.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Permission } from './entities/permission.entity';
 import { Repository } from 'typeorm';
+import { RoleHasPermission } from '../role_has_permission/entities/role_has_permission.entity';
 
 @Injectable()
 export class PermissionService {
