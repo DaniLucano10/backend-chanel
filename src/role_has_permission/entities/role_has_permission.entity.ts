@@ -1,5 +1,6 @@
 import {
   CreateDateColumn,
+  Entity,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -8,6 +9,7 @@ import {
 import { Role } from '../../role/entities/role.entity';
 import { Permission } from '../../permission/entities/permission.entity';
 
+@Entity()
 export class RoleHasPermission {
   @PrimaryGeneratedColumn()
   id!: number;
