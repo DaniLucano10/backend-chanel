@@ -15,6 +15,8 @@ import * as bcrypt from 'bcrypt';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Country } from 'src/country/entities/country.entity';
 import { RoleHasPermission } from 'src/role_has_permission/entities/role_has_permission.entity';
+import { Role } from 'src/role/entities/role.entity';
+import { UserHasRole } from 'src/user_has_role/entities/user_has_role.entity';
 
 @Injectable()
 export class UsersService {
@@ -25,10 +27,15 @@ export class UsersService {
     private readonly countryRepository: Repository<Country>,
     @InjectRepository(RoleHasPermission)
     private readonly roleHasPermissionRepository: Repository<RoleHasPermission>,
+    @InjectRepository(Role)
+    private readonly roleRepository: Repository<Role>,
+    @InjectRepository(UserHasRole)
+    private readonly userHasRoleRepository: Repository<UserHasRole>,
   ) {}
   async create(createUserDto: CreateUserDto): Promise<any> {
+    const { role_id, ...userData } = createUserDto;
     const existingUser = await this.userRepository.findOne({
-      where: { email: createUserDto.email },
+      where: { email: userData.email },
     });
 
     if (existingUser) {
@@ -37,21 +44,37 @@ export class UsersService {
 
     // Verifica si el pais existe
     const countryExists = await this.countryRepository.findOne({
-      where: { id: createUserDto.country_id },
+      where: { id: userData.country_id },
     });
 
     if (!countryExists) {
       throw new ConflictException('El pais no existe');
     }
 
-    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+    // Verifica si el rol existe
+    const roleExists = await this.roleRepository.findOne({
+      where: { id: role_id },
+    });
+
+    if (!roleExists) {
+      throw new ConflictException('El rol no existe');
+    }
+
+    const hashedPassword = await bcrypt.hash(userData.password, 10);
 
     const user = this.userRepository.create({
-      ...createUserDto,
+      ...userData,
       password: hashedPassword,
     });
 
     const savedUser = await this.userRepository.save(user);
+
+    // Asignar el rol al usuario
+    const userHasRole = this.userHasRoleRepository.create({
+      user: savedUser,
+      role: roleExists,
+    });
+    await this.userHasRoleRepository.save(userHasRole);
 
     //Remover password de forma segura
     const { password, ...safeUser } = savedUser;
@@ -74,7 +97,7 @@ export class UsersService {
     status?: boolean;
     email?: string;
     fullname?: string;
-  }): Promise<Omit<User, 'password'>[]> {
+  }): Promise<any[]> {
     const filters: Record<string, any> = {};
 
     if (query.status !== undefined) {
@@ -89,54 +112,49 @@ export class UsersService {
 
     const users = await this.userRepository.find({
       where: filters,
-      select: [
-        'id',
-        'fullname',
-        'email',
-        'status',
-        'created_at',
-        'updated_at',
-        'country',
-        'country_id',
-      ],
-      relations: ['country'],
+      relations: ['country', 'roles', 'roles.role'],
     });
 
-    // Si no hay password en select, esto es más que suficiente:
-    return users.map(({ password, ...rest }) => {
-      void password; // silencia ESLint si hace falta
-      return rest;
+    return users.map((user) => {
+      const { password, roles, ...rest } = user;
+      void password;
+      return {
+        ...rest,
+        roles: roles.map((userHasRole) => ({
+          id: userHasRole.role.id,
+          name: userHasRole.role.name,
+        })),
+      };
     });
   }
 
-  async findOne(id: number): Promise<Omit<User, 'password'>> {
+  async findOne(id: number): Promise<any> {
     const user = await this.userRepository.findOne({
       where: { id },
-      select: [
-        'id',
-        'fullname',
-        'email',
-        'status',
-        'created_at',
-        'updated_at',
-        'country',
-        'country_id',
-      ],
-      relations: ['country'],
+      relations: ['country', 'roles', 'roles.role'],
     });
 
     if (!user) {
       throw new NotFoundException(`Usuario con ID ${id} no encontrado`);
     }
 
-    // El password ya está excluido por el `select`
-    return user;
+    const { password, roles, ...rest } = user;
+    void password;
+
+    return {
+      ...rest,
+      roles: roles.map((userHasRole) => ({
+        id: userHasRole.role.id,
+        name: userHasRole.role.name,
+      })),
+    };
   }
 
   async update(
     id: number,
     updateUserDto: UpdateUserDto,
   ): Promise<Omit<User, 'password'>> {
+    const { role_id, ...userData } = updateUserDto;
     try {
       // Busca usuario
       const user = await this.userRepository.findOne({ where: { id } });
@@ -144,8 +162,38 @@ export class UsersService {
         throw new ConflictException(`Usuario con ID ${id} no encontrado`);
       }
 
+      // Si se proporciona un role_id, actualizarlo
+      if (role_id) {
+        // Verificar que el rol exista
+        const roleExists = await this.roleRepository.findOne({
+          where: { id: role_id },
+        });
+        if (!roleExists) {
+          throw new NotFoundException(`Rol con ID ${role_id} no encontrado`);
+        }
+
+        // Buscar la asignación de rol existente para este usuario
+        let userHasRole = await this.userHasRoleRepository.findOne({
+          where: { user: { id } },
+        });
+
+        if (userHasRole) {
+          // Si existe, actualizar el role_id
+          userHasRole.role = roleExists;
+        } else {
+          // Si no existe, crear una nueva asignación
+          userHasRole = this.userHasRoleRepository.create({
+            user: user,
+            role: roleExists,
+          });
+        }
+        await this.userHasRoleRepository.save(userHasRole);
+      }
+
       // Actualiza el usuario
-      await this.userRepository.update(id, updateUserDto);
+      if (Object.keys(userData).length > 0) {
+        await this.userRepository.update(id, userData);
+      }
 
       // Recargar el usuario para obtener la relación actualizada
       const reloadedUser = await this.userRepository.findOne({
