@@ -11,10 +11,11 @@ import {
 import { UserHasRoleService } from './user_has_role.service';
 import { CreateUserHasRoleDto } from './dto/create-user_has_role.dto';
 import { UpdateUserHasRoleDto } from './dto/update-user_has_role.dto';
-import { ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { FilterUserHasRoleDto } from './dto/filter-user_has_role.dto';
 import { ParsePositivePipe } from '../pipes/parse_positive/parse_positive.pipe';
 
+@ApiBearerAuth('JWT-auth')
 @Controller('user-has-role')
 export class UserHasRoleController {
   constructor(private readonly userHasRoleService: UserHasRoleService) {}

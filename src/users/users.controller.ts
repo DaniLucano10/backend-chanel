@@ -28,6 +28,7 @@ export class UsersController {
 
   @Get()
   @ApiOperation({ summary: 'Listar los usuarios' })
+  @ApiQuery({ name: 'country_id', type: Number, required: false })
   @ApiQuery({ name: 'status', type: Boolean, required: false })
   @ApiQuery({ name: 'email', type: String, required: false })
   @ApiQuery({ name: 'fullname', type: String, required: false })
@@ -39,7 +40,7 @@ export class UsersController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Obtener un usuario por su ID' })
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', new ParsePositivePipe()) id: string) {
     return this.usersService.findOne(+id);
   }
 

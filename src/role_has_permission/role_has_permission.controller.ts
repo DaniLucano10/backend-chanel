@@ -11,9 +11,10 @@ import {
 import { RoleHasPermissionService } from './role_has_permission.service';
 import { CreateRoleHasPermissionDto } from './dto/create-role_has_permission.dto';
 import { UpdateRoleHasPermissionDto } from './dto/update-role_has_permission.dto';
-import { ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { ParsePositivePipe } from '../pipes/parse_positive/parse_positive.pipe';
 
+@ApiBearerAuth('JWT-auth')
 @Controller('role-has-permission')
 export class RoleHasPermissionController {
   constructor(
