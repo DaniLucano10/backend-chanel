@@ -8,17 +8,23 @@ import {
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 
 import * as bcrypt from 'bcrypt';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { Country } from 'src/country/entities/country.entity';
+import { RoleHasPermission } from 'src/role_has_permission/entities/role_has_permission.entity';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(Country)
+    private readonly countryRepository: Repository<Country>,
+    @InjectRepository(RoleHasPermission)
+    private readonly roleHasPermissionRepository: Repository<RoleHasPermission>,
   ) {}
   async create(createUserDto: CreateUserDto): Promise<any> {
     const existingUser = await this.userRepository.findOne({
@@ -27,6 +33,15 @@ export class UsersService {
 
     if (existingUser) {
       throw new BadRequestException('El correo ya está registrado');
+    }
+
+    // Verifica si el pais existe
+    const countryExists = await this.countryRepository.findOne({
+      where: { id: createUserDto.country_id },
+    });
+
+    if (!countryExists) {
+      throw new ConflictException('El pais no existe');
     }
 
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
@@ -204,6 +219,63 @@ export class UsersService {
       throw new InternalServerErrorException(
         'Ocurrió un error interno al intentar eliminar el usuario.',
       );
+    }
+  }
+  async rolesAndPermissions(user_id: number): Promise<any> {
+    try {
+      // Busca el usuario y sus roles
+      const user = await this.userRepository.findOne({
+        where: { id: user_id },
+        relations: ['roles.role'],
+      });
+      if (!user) throw new NotFoundException('Usuario no encontrado');
+
+      // Obtiene los roles del usuario
+      const roles = user.roles.map((userRole) => userRole.role);
+      const roleIds = roles.map((role) => role.id);
+
+      // Obtiene los permisos de los roles
+      const permissions = await this.roleHasPermissionRepository.find({
+        where: { role: { id: In(roleIds) } },
+        relations: ['permission', 'role'],
+      });
+
+      // Elimina permisos duplicados usando un Set
+      const uniquePermissions = Array.from(
+        new Map(
+          permissions.map((rp) => [rp.permission.id, rp.permission]),
+        ).values(),
+      );
+
+      // Agregar cantidad de permisos a cada rol
+      const permissionsByRole = new Map<number, number>();
+      permissions.forEach((rp) => {
+        const roleId = rp.role.id;
+        permissionsByRole.set(roleId, (permissionsByRole.get(roleId) || 0) + 1);
+      });
+      const rolesWithPermissionsCount = roles.map((role) => ({
+        ...role,
+        permissions_count: permissionsByRole.get(role.id) || 0,
+      }));
+
+      return {
+        roles: rolesWithPermissionsCount,
+        permissions: uniquePermissions,
+      };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        console.error('Error al listar los roles y permisos:', error.message);
+        throw error;
+      } else {
+        console.error('Error al listar los roles y permisos:', error);
+        throw new InternalServerErrorException(
+          `Error al listar los roles y permisos: ${
+            typeof error === 'object' && error !== null && 'message' in error
+              ? (error as { message: string }).message
+              : String(error)
+          }`,
+        );
+      }
     }
   }
 }
