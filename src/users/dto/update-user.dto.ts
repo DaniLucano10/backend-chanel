@@ -16,4 +16,9 @@ export class UpdateUserDto {
   @IsOptional()
   @IsNumber()
   country_id?: number;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsNumber()
+  role_id!: number;
 }

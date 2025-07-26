@@ -21,4 +21,9 @@ export class CreateUserDto {
   @IsNotEmpty({ message: "El campo 'country_id' es requerido" })
   @ApiProperty()
   country_id!: number;
+
+  @IsPositive({ message: "El campo 'role_id' debe ser un número positivo" })
+  @IsNotEmpty({ message: "El campo 'role_id' es requerido" })
+  @ApiProperty()
+  role_id!: number;
 }
