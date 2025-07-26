@@ -67,15 +67,19 @@ export class UserHasRoleService {
         role,
       });
       const userRole = await this.userHasRoleRepository.save(userHasRole);
-      delete userRole.user.password;
+      // delete userRole.user.password;
       return userRole;
     } catch (error) {
-      console.error('Error al crear la relación usuario-rol:', error.message);
       if (error instanceof HttpException) {
+        console.error('Error al crear la relación usuario-rol:', error.message);
         throw error;
       }
       throw new InternalServerErrorException(
-        `Error interno al crear la relación usuario-rol. ${error.message}.`,
+        `Error interno al crear la relación usuario-rol. ${
+          typeof error === 'object' && error !== null && 'message' in error
+            ? (error as { message: string }).message
+            : String(error)
+        }.`,
       );
     }
   }
@@ -119,16 +123,23 @@ export class UserHasRoleService {
         );
       }
       return response.map((userHasRole) => {
-        delete userHasRole.user.password;
+        // delete userHasRole.user.password;
         return userHasRole;
       });
     } catch (error) {
-      console.error('Error al buscar la relación usuario-rol:', error.message);
       if (error instanceof HttpException) {
+        console.error(
+          'Error al buscar la relación usuario-rol:',
+          error.message,
+        );
         throw error;
       }
       throw new InternalServerErrorException(
-        `Error interno al buscar la relación usuario-rol. ${error.message}.`,
+        `Error interno al buscar la relación usuario-rol. ${
+          typeof error === 'object' && error !== null && 'message' in error
+            ? (error as { message: string }).message
+            : String(error)
+        }.`,
       );
     }
   }
@@ -171,18 +182,22 @@ export class UserHasRoleService {
 
       Object.assign(userHasRole, updateUserHasRoleDto);
       await this.userHasRoleRepository.save(userHasRole);
-      delete userHasRole.user.password;
+      // delete userHasRole.user.password;
       return userHasRole;
     } catch (error) {
-      console.error(
-        'Error al actualizar la relación usuario-rol:',
-        error.message,
-      );
       if (error instanceof HttpException) {
+        console.error(
+          'Error al actualizar la relación usuario-rol:',
+          error.message,
+        );
         throw error;
       }
       throw new InternalServerErrorException(
-        `Error interno al actualizar la relación usuario-rol. ${error.message}.`,
+        `Error interno al actualizar la relación usuario-rol. ${
+          typeof error === 'object' && error !== null && 'message' in error
+            ? (error as { message: string }).message
+            : String(error)
+        }.`,
       );
     }
   }
@@ -199,15 +214,19 @@ export class UserHasRoleService {
       await this.userHasRoleRepository.remove(userHasRole);
       return { message: 'Relación usuario-rol eliminada' };
     } catch (error) {
-      console.error(
-        'Error al eliminar la relación usuario-rol:',
-        error.message,
-      );
       if (error instanceof HttpException) {
+        console.error(
+          'Error al eliminar la relación usuario-rol:',
+          error.message,
+        );
         throw error;
       }
       throw new InternalServerErrorException(
-        `Error interno al eliminar la relación usuario-rol. ${error.message}.`,
+        `Error interno al eliminar la relación usuario-rol. ${
+          typeof error === 'object' && error !== null && 'message' in error
+            ? (error as { message: string }).message
+            : String(error)
+        }.`,
       );
     }
   }
