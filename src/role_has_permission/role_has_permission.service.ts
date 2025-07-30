@@ -192,6 +192,40 @@ export class RoleHasPermissionService {
     }
   }
 
+  async unassignRolePermission(data: {
+    role_id: number;
+    permission_id: number;
+  }) {
+    const { role_id, permission_id } = data;
+
+    try {
+      const relation = await this.roleHasPermissionRepository.findOne({
+        where: {
+          role: { id: role_id },
+          permission: { id: permission_id },
+        },
+        relations: ['role', 'permission'],
+      });
+
+      if (!relation) {
+        throw new NotFoundException(
+          `No existe la relación entre rol ${role_id} y permiso ${permission_id}`,
+        );
+      }
+
+      await this.roleHasPermissionRepository.remove(relation);
+
+      return {
+        message: `Permiso ${permission_id} desasignado del rol ${role_id} correctamente.`,
+      };
+    } catch (error) {
+      console.error('Error al desasignar permiso del rol:', error);
+      throw new InternalServerErrorException(
+        'No se pudo desasignar el permiso.',
+      );
+    }
+  }
+
   async remove(id: number) {
     try {
       // Busca la relación rol-permiso

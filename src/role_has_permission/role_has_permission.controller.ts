@@ -13,6 +13,7 @@ import { CreateRoleHasPermissionDto } from './dto/create-role_has_permission.dto
 import { UpdateRoleHasPermissionDto } from './dto/update-role_has_permission.dto';
 import { ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { ParsePositivePipe } from '../pipes/parse_positive/parse_positive.pipe';
+import { UnassignRolePermissionDto } from './dto/unassign-role-permission.dto';
 
 @ApiBearerAuth('JWT-auth')
 @Controller('role-has-permission')
@@ -50,6 +51,12 @@ export class RoleHasPermissionController {
     @Body() updateRoleHasPermissionDto: UpdateRoleHasPermissionDto,
   ) {
     return this.roleHasPermissionService.update(id, updateRoleHasPermissionDto);
+  }
+
+  @Post('unassign-role-permission')
+  @ApiOperation({ summary: 'Desasignar un permiso a un rol' })
+  async unassignRolePermission(@Body() body: UnassignRolePermissionDto) {
+    return this.roleHasPermissionService.unassignRolePermission(body);
   }
 
   @Delete(':id')
