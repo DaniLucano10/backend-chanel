@@ -38,6 +38,15 @@ export class UsersController {
     return this.usersService.find(query);
   }
 
+  @Get('roles-and-permissions')
+  @ApiOperation({ summary: 'Listar los roles y permisos de un usuario' })
+  @ApiQuery({ name: 'user_id', required: true })
+  rolesAndPermissions(
+    @Query('user_id', new ParsePositivePipe()) user_id: number,
+  ) {
+    return this.usersService.rolesAndPermissions(user_id);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Obtener un usuario por su ID' })
   findOne(@Param('id', new ParsePositivePipe()) id: string) {
@@ -55,7 +64,7 @@ export class UsersController {
 
   @Patch('toggle-status/:id')
   @ApiOperation({ summary: 'Cambiar el estado de un usuario' })
-  toggleStatus(@Param('id') id: string) {
+  toggleStatus(@Param('id', new ParsePositivePipe()) id: string) {
     return this.usersService.toggleStatus(+id);
   }
 
