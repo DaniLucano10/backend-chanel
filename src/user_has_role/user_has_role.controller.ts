@@ -14,6 +14,7 @@ import { UpdateUserHasRoleDto } from './dto/update-user_has_role.dto';
 import { ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { FilterUserHasRoleDto } from './dto/filter-user_has_role.dto';
 import { ParsePositivePipe } from '../pipes/parse_positive/parse_positive.pipe';
+import { UnassignUserRoleDto } from './dto/unassign-user-role.dto';
 
 @ApiBearerAuth('JWT-auth')
 @Controller('user-has-role')
@@ -42,6 +43,11 @@ export class UserHasRoleController {
     @Body() updateUserHasRoleDto: UpdateUserHasRoleDto,
   ) {
     return this.userHasRoleService.update(+id, updateUserHasRoleDto);
+  }
+  @Post('unassign-user-role')
+  @ApiOperation({ summary: 'Desasignar un rol a un usuario' })
+  async unassignUserRole(@Body() dto: UnassignUserRoleDto) {
+    return this.userHasRoleService.unassignUserRole(dto);
   }
 
   @Delete(':id')

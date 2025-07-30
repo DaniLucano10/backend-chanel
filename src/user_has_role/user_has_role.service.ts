@@ -14,6 +14,7 @@ import { Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
 import { Role } from '../role/entities/role.entity';
 import { FilterUserHasRoleDto } from './dto/filter-user_has_role.dto';
+import { UnassignUserRoleDto } from './dto/unassign-user-role.dto';
 
 @Injectable()
 export class UserHasRoleService {
@@ -194,6 +195,44 @@ export class UserHasRoleService {
       }
       throw new InternalServerErrorException(
         `Error interno al actualizar la relación usuario-rol. ${
+          typeof error === 'object' && error !== null && 'message' in error
+            ? (error as { message: string }).message
+            : String(error)
+        }.`,
+      );
+    }
+  }
+
+  async unassignUserRole(dto: UnassignUserRoleDto) {
+    try {
+      const { user_id, role_id } = dto;
+
+      const relation = await this.userHasRoleRepository.findOne({
+        where: {
+          user: { id: user_id },
+          role: { id: role_id },
+        },
+        relations: ['user', 'role'], // Asegura que se pueda eliminar correctamente
+      });
+
+      if (!relation) {
+        throw new NotFoundException(
+          `No se encontró relación entre usuario ${user_id} y rol ${role_id}`,
+        );
+      }
+
+      await this.userHasRoleRepository.remove(relation);
+
+      return {
+        message: `Rol ${role_id} desasignado del usuario ${user_id} correctamente.`,
+      };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        console.error('Error al desasignar rol:', error.message);
+        throw error;
+      }
+      throw new InternalServerErrorException(
+        `Error interno al desasignar rol. ${
           typeof error === 'object' && error !== null && 'message' in error
             ? (error as { message: string }).message
             : String(error)
