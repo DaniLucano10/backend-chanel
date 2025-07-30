@@ -6,12 +6,11 @@ import {
   Patch,
   Param,
   Delete,
-  Query,
 } from '@nestjs/common';
 import { RoleService } from './role.service';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
-import { ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { ParsePositivePipe } from '../pipes/parse_positive/parse_positive.pipe';
 
 @ApiBearerAuth('JWT-auth')
@@ -26,15 +25,9 @@ export class RoleController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Listar los roles' })
-  @ApiQuery({ name: 'id', required: false })
-  @ApiQuery({ name: 'name', required: false })
-  async findByCriteria(
-    @Query('id') id: number,
-    @Query('name') name: string,
-  ): Promise<CreateRoleDto[]> {
-    const data = { id, name };
-    return (await this.roleService.findByCriteria(data)) as CreateRoleDto[];
+  @ApiOperation({ summary: 'Listar todos los roles con sus permisos' })
+  async findAll(): Promise<any> {
+    return this.roleService.findAll();
   }
 
   @Patch(':id')

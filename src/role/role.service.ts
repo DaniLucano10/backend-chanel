@@ -50,43 +50,25 @@ export class RoleService {
     }
   }
 
-  async findByCriteria(data: { id?: number; name?: string }): Promise<any> {
-    try {
-      const { id, name } = data;
-      const query = this.roleRepository.createQueryBuilder('entity');
+  async findAll(): Promise<any[]> {
+    const roles = await this.roleRepository.find({
+      relations: ['permissions', 'permissions.permission'],
+      order: {
+        created_at: 'DESC',
+      },
+    });
 
-      if (id) {
-        query.andWhere('entity.id = :id', { id });
-      }
-      if (name) {
-        query.andWhere('entity.name ILIKE :name', { name: `%${name}%` });
-      }
-
-      query.orderBy('entity.created_at', 'DESC');
-      const response = await query.getMany();
-
-      if (response.length === 0) {
-        throw new NotFoundException(
-          'No existen roles con los criterios de búsqueda proporcionados.',
-        );
-      }
-
-      return response;
-    } catch (error) {
-      if (error instanceof HttpException) {
-        console.error('Error al listar roles:', error.message);
-        throw error;
-      } else {
-        console.error('Error al listar roles:', error);
-        throw new InternalServerErrorException(
-          `Error al listar roles: ${
-            typeof error === 'object' && error !== null && 'message' in error
-              ? (error as { message: string }).message
-              : String(error)
-          }`,
-        );
-      }
-    }
+    return roles.map((role) => ({
+      id: role.id,
+      name: role.name,
+      created_at: role.created_at,
+      updated_at: role.updated_at,
+      permissions: role.permissions.map((rp) => ({
+        id: rp.permission.id,
+        name: rp.permission.name,
+        guard_name: rp.permission.guard_name,
+      })),
+    }));
   }
 
   async update(id: number, updateRoleDto: UpdateRoleDto) {
