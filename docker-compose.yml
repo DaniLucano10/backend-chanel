@@ -1,13 +1,29 @@
-version: "3.8"
+version: '3.8'
+
 services:
-  postgresDB:
-    image: postgres:14.1-alpine
+  backend:
+    build: .
+    container_name: nest_backend
+    restart: always
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:15
+    container_name: postgres_db
     restart: always
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=db_crud
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: bd-chanel
     volumes:
-      - ./postgres:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5436:5432"
+      - "5432:5432"
+
+volumes:
+  postgres_data:
